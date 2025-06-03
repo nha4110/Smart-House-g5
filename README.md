@@ -14,6 +14,13 @@ A React-based Smart Home app developed by Group 5.
   Download and install Git from:  
   [https://git-scm.com/downloads](https://git-scm.com/downloads)
 
+- **Ubuntu** (to clone the repository)  
+  Download and install Ubuntu from:  
+  [https://apps.microsoft.com/detail/9PDXGNCFSCZV?hl=en-us&gl=US&ocid=pdpshare](Ubuntu)
+
+- **Docker** (to clone the repository)  
+  Download and install Docker from:  
+  [https://www.docker.com/](Docker)
 ---
 
 ## Setup and Run Instructions
@@ -32,3 +39,14 @@ npm install
 
 # 4. Start the development server
 npm start
+
+
+---
+```bash
+
+## how to run docker & thingsboard
+
+cd Tb-docker
+docker volume create mytb-data
+docker volume create mytb-logs
+docker compose logs -f thingsboard-ce
