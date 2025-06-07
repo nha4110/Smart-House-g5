@@ -134,3 +134,14 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Ignore environment variables
+.env
+
+# Ignore node modules (auto-generated)
+node_modules/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
