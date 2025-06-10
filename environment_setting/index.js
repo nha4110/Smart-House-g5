@@ -33,7 +33,7 @@ async function sendTempData(temp) {
     // Send a POST request to the ThingsBoard telemetry endpoint
     const response = await axios.post(url, data);
 
-    console.log('📡 Telemetry sent:', response.data);
+    console.log('Telemetry sent:', response.data);
   } catch (error) {
     console.error('❌ Error sending telemetry:', error.message);
   }
