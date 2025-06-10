@@ -14,7 +14,7 @@
     "iot",
     "cloud"
   ],
-  "author": "Your Name",
+  "author": "croissant",
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.0.0",
