@@ -200,7 +200,7 @@ export default function Home() {
                 size="lg"
                 className="bg-white text-green-700 hover:bg-white/90 px-8 py-3 text-lg rounded-full shadow-md"
               >
-                Start Your Smart Home Journey
+                Start Your Smart Home Journey 
               </Button>
             </div>
           </div>
