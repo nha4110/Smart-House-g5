@@ -50,3 +50,16 @@ cd Tb-docker
 docker volume create mytb-data
 docker volume create mytb-logs
 docker compose logs -f thingsboard-ce
+
+
+## how to run the fe
+
+cd smart-app
+npm run dev (if that don't work than do the command below)
+cd smart-app
+npm install vite @vitejs/plugin-react --save-dev
+npm install --save-dev @types/node
+npm install --save-dev @types/react @types/react-dom
+-- close vscode and re-open it --
+cd smart-app
+=> npm run dev
