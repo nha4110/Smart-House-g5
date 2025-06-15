@@ -1,3 +1,4 @@
+https://smart-house-g5.vercel.app/
 # Smart-House-g5
 
 A React-based Smart Home app developed by Group 5.
