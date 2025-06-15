@@ -1,12 +1,14 @@
+version: '3.8'
+
 services:
-  mytb:
+  thingsboard:
     image: thingsboard/tb-postgres
     restart: always
     ports:
-      - "8080:9090"         # Web UI
-      - "1883:1883"         # MQTT
-      - "7070:7070"         # HTTP
-      - "5683-5688:5683-5688/udp"  # CoAP
+      - "8080:9090"               # TB Web UI → accessible on localhost:8080
+      - "1883:1883"               # MQTT protocol
+      - "7070:7070"               # HTTP protocol
+      - "5683-5688:5683-5688/udp" # CoAP protocol
     environment:
       TB_QUEUE_TYPE: in-memory
       TB_DB_TYPE: postgres
@@ -15,10 +17,25 @@ services:
       TB_DB_NAME: neondb
       TB_DB_USERNAME: neondb_owner
       TB_DB_PASSWORD: your_neon_password
-      TB_SSL_ENABLED: "true"              # ADD THIS for Neon (requires SSL)
-      TB_SCHEDULER_ENABLED: "false"       # Optional
+      TB_SSL_ENABLED: "true"
     volumes:
       - mytb-logs:/var/log/thingsboard
+
+  backend:
+    build: ./backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PGHOST: ep-your-neon-host.ap-southeast-1.aws.neon.tech
+      PGUSER: neondb_owner
+      PGPASSWORD: your_neon_password
+      PGDATABASE: neondb
+      PGPORT: 5432
+      THINGSBOARD_HOST: http://thingsboard:9090
+      TB_TOKEN_TEMP_SENSOR: your_tb_token_here
+    depends_on:
+      - thingsboard
 
 volumes:
   mytb-logs:
