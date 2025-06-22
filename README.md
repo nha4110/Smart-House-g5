@@ -64,3 +64,14 @@ npm install --save-dev @types/react @types/react-dom
 -- close vscode and re-open it --
 cd smart-app
 => npm run dev
+
+## how to insert the seed.sql
+cd backend
+npm install pg
+npm install dotenv
+npm instakk axios
+-- close vscode and re-open it --
+cd backend
+node script/runseed.js
+-- to export data to export files --
+node script/export.js

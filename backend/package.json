@@ -2,6 +2,7 @@
   "name": "neon-thingsboard-integration",
   "version": "1.0.0",
   "description": "Node.js app connecting Neon PostgreSQL and ThingsBoard Cloud",
+  "type": "module", 
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -17,9 +18,9 @@
   "author": "croissant",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "^16.0.0",
-    "pg": "^8.11.1",
-    "axios": "^1.4.0"
+    "axios": "^1.4.0",
+    "dotenv": "^16.5.0",
+    "pg": "^8.16.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"

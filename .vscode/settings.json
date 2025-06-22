@@ -1,0 +1,76 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "previewLimit": 50,
+            "server": "br-damp-shadow-a1dfxno3",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "database": "neondb",
+            "username": "neondb_owner",
+            "name": "neondb_owner"
+        },
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "previewLimit": 50,
+            "server": "ep-damp-shadow-a1dfxno3.ap-southeast-1.aws.neon.tech",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "neondb_owner",
+            "database": "neondb",
+            "username": "neondb_owner"
+        },
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "chadinskirt",
+            "database": "neondb",
+            "username": "neondb_owner",
+            "group": "ep-damp-shadow-a1dfxno3.ap-southeast-1.aws.neon.tech"
+        },
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": false
+                }
+            },
+            "previewLimit": 50,
+            "server": "ep-damp-shadow-a1dfxno3.ap-southeast-1.aws.neon.tech",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "phantruongthinh112006@gmail.com",
+            "database": "neondb",
+            "username": "neondb_owner"
+        },
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": false
+                }
+            },
+            "previewLimit": 50,
+            "server": "ep-damp-shadow-a1dfxno3.ap-southeast-1.aws.neon.tech",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "development",
+            "username": "phantruongthinh112006@gmail.com",
+            "group": "neondb_owner",
+            "database": "neondb"
+        }
+    ]
+}

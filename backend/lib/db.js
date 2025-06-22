@@ -1,4 +1,6 @@
 import { Client } from 'pg';
+import { config } from 'dotenv';
+config(); // loads .env from current folder
 
 let cachedClient = global.pgClient; // cache client
 
