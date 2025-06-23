@@ -1,0 +1,20 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "previewLimit": 50,
+            "server": "ep-tiny-paper-a1yox35a-pooler.ap-southeast-1.aws.neon.tech",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Neon Smart Home ",
+            "database": "neondb",
+            "username": "neondb_owner",
+            "password": "npg_xl1DVLsv3Gyj",
+            "connectionTimeout": 30
+        }
+    ]
+}
