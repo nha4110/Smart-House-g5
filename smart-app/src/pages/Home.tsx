@@ -88,18 +88,35 @@ export default function Home() {
           />
           <button
             onClick={handleLogin}
-            className={`relative w-1/2 z-10 text-lg font-semibold transition-colors duration-300 hover:text-purple-200 animate-pulse-glow ${
-              activeSection === 0 ? "text-purple-300" : "text-white"
-            }`}
+            className={`relative w-1/2 z-10 text-lg font-semibold transition-all duration-300 
+              ${
+                activeSection === 0
+                  ? "text-purple-300 bg-gradient-to-r from-cyan-500 to-purple-500"
+                  : "text-white bg-gradient-to-r from-purple-600 to-cyan-600"
+              }
+              hover:from-purple-400 hover:to-cyan-400 hover:text-white shadow-md rounded-full h-full`}
             onMouseEnter={() => setActiveSection(null)}
+            style={{
+              borderRight: "1px solid rgba(192,132,252,0.3)",
+              borderRadius: "9999px 0 0 9999px",
+            }}
           >
             Get Started
           </button>
           <button
-            className={`relative w-1/2 z-10 text-lg font-semibold transition-colors duration-300 hover:text-purple-200 animate-pulse-glow ${
-              activeSection === 0 ? "text-white" : "text-purple-300"
-            }`}
+            className={`relative w-1/2 z-10 text-lg font-semibold transition-all duration-300 
+              ${
+                activeSection === 0
+                  ? "text-white bg-gradient-to-r from-cyan-600 to-purple-600"
+                  : "text-purple-300 bg-gradient-to-r from-purple-400 to-cyan-400"
+              }
+              hover:from-cyan-500 hover:to-purple-500 hover:text-white shadow-md rounded-full h-full`}
             onMouseEnter={() => setActiveSection(0)}
+            onClick={() => (window.location.href = "/feature")}
+            style={{
+              borderLeft: "1px solid rgba(192,132,252,0.3)",
+              borderRadius: "0 9999px 9999px 0",
+            }}
           >
             Explore Features
           </button>
@@ -270,8 +287,17 @@ export default function Home() {
           Our platform ensures effortless compatibility with leading smart home ecosystems, delivering a unified and intuitive experience.
         </p>
         <div className="relative w-full overflow-hidden h-36 group">
-          <div className="absolute flex gap-12 animate-scroll-x items-center h-full px-12 whitespace-nowrap group-hover:pause-animation">
+          <div
+            className="absolute flex gap-12 animate-scroll-x items-center h-full px-12 whitespace-nowrap group-hover:pause-animation"
+            style={{ animationDelay: "-22.5s" }} // Start in the middle of the animation
+          >
             {[
+              "🍎", "📱", "🔒", "🌿", "📡",
+              "💡", "🎛️", "📶", "🎧", "📷",
+              "🛋️", "🎛️", "🧠", "🌐", "🔌",
+              "🏠", "🔋", "🔔", "📱", "💻",
+              "🖥️", "🔊", "🎥", "🛠️", "🌍",
+              "🕰️", "🔧", "📲", "💨", "🖼️",
               "🍎", "📱", "🔒", "🌿", "📡",
               "💡", "🎛️", "📶", "🎧", "📷",
               "🛋️", "🎛️", "🧠", "🌐", "🔌",
