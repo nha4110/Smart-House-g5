@@ -1,5 +1,5 @@
-
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -16,6 +16,7 @@ import Footer from "@/components/footer";
 export default function Home() {
   const [activeSection, setActiveSection] = useState<number | null>(null);
   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -47,7 +48,7 @@ export default function Home() {
     }`;
 
   const handleLogin = () => {
-    window.location.href = "/login";
+    navigate("/login");
   };
 
   return (
@@ -112,7 +113,7 @@ export default function Home() {
               }
               hover:from-cyan-500 hover:to-purple-500 hover:text-white shadow-md rounded-full h-full`}
             onMouseEnter={() => setActiveSection(0)}
-            onClick={() => (window.location.href = "/feature")}
+            onClick={() => navigate("/feature")}
             style={{
               borderLeft: "1px solid rgba(192,132,252,0.3)",
               borderRadius: "0 9999px 9999px 0",
