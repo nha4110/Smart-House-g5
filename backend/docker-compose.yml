@@ -1,32 +1,13 @@
 services:
   thingsboard:
     image: thingsboard/tb-postgres
-    restart: always
     ports:
-      - "8080:9090"               # TB Web UI → accessible on localhost:8080
-      - "1883:1883"               # MQTT protocol
-      - "7070:7070"               # HTTP protocol
-      - "5683-5688:5683-5688/udp" # CoAP protocol
+      - "8080:9090"
     env_file:
       - .env
     environment:
       TB_QUEUE_TYPE: in-memory
       TB_DB_TYPE: postgres
-      TB_SSL_ENABLED: "true"
-    volumes:
-      - mytb-logs:/var/log/thingsboard
-
-  backend:
-    build: ./backend
-    restart: always
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env
-    environment:
-      THINGSBOARD_HOST: http://thingsboard:9090
-    depends_on:
-      - thingsboard
-
-volumes:
-  mytb-logs:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://your_neon_host/dbname
+      SPRING_DATASOURCE_USERNAME: 
+      SPRING_DATASOURCE_PASSWORD: 
