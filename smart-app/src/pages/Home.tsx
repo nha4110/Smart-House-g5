@@ -2,16 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Home as HomeIcon,
-  Shield,
-  Zap,
-  Brain,
-  Smartphone,
-  Leaf,
-  Star,
-} from "lucide-react";
-import Footer from "@/components/footer";
+import { Home as HomeIcon, Shield, Zap, Brain, Smartphone, Leaf, Star } from "lucide-react"; import Footer from "@/components/footer";
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState<number | null>(null);
