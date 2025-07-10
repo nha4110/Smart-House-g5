@@ -4,69 +4,56 @@ interface FooterProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
 
-const Footer: React.FC<FooterProps> = ({ className, ...props }) => {
+const Footer: React.FC<FooterProps> = ({ className = '', ...props }) => {
   return (
     <footer
-      className={`w-screen py-12 bg-gradient-to-b from-purple-950 via-purple-900 to-blue-900 animate-gradient text-white sticky bottom-0 min-h-[calc(100vh-80vh)] ${className}`}
+      className={`w-full py-10 px-4 bg-gradient-to-tr from-indigo-950 via-purple-900 to-blue-950 text-white relative overflow-hidden ${className}`}
       {...props}
     >
-      <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-center md:text-left backdrop-blur-md bg-white/10 border-t-2 border-purple-400/30">
-        <div className="mb-8 md:mb-0">
-          <h2 className="text-2xl font-extrabold text-purple-300 tracking-tight hover:text-purple-400 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-start md:items-center">
+        {/* Course Info */}
+        <div className="space-y-2">
+          <h2 className="text-2xl font-extrabold tracking-tight text-purple-300 hover:text-purple-400 transition duration-300">
             COS20031
           </h2>
-          <p className="text-sm text-white/90 font-medium mt-2">
-            Interface Design and Development
+          <p className="text-sm text-white/90 font-medium">
+            Interface Design and Development - 2025
           </p>
         </div>
+
+        {/* Team Members */}
         <div>
-          <h3 className="text-xl font-semibold text-white mb-4 tracking-tight">
-            Team Members
-          </h3>
-          <ul className="text-sm text-white/90 font-medium space-y-2">
-            {['Nhật Hoàng', 'Hoàng Long', 'Thịnh', 'Việt Anh'].map((name, index) => (
+          <h3 className="text-xl font-semibold text-white mb-3 tracking-tight">Team Members</h3>
+          <ul className="text-sm text-white/90 font-medium space-y-1">
+            {['Nhật Hoàng', 'Hoàng Long', 'Thịnh', 'Việt Anh'].map((member, i) => (
               <li
-                key={index}
+                key={i}
                 className="hover:text-purple-300 transition-colors duration-300 transform hover:translate-x-1"
               >
-                {name}
+                {member}
               </li>
             ))}
           </ul>
         </div>
       </div>
-      <style>
-        {`
-          @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradient 8s ease-in-out infinite;
-          }
-          footer {
-            position: relative;
-            overflow: hidden;
-          }
-          footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(to right, transparent, rgba(192, 132, 252, 0.5), transparent);
-            animation: glow-border 3s ease-in-out infinite;
-          }
-          @keyframes glow-border {
-            0% { transform: translateX(-100%); }
-            50% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-          }
-        `}
-      </style>
+
+      {/* Bottom border glow */}
+      <div className="absolute bottom-0 left-0 w-full h-[2px]">
+        <div className="h-full w-full animate-glow bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
+      </div>
+
+      {/* Keyframes & animation styling */}
+      <style>{`
+        @keyframes glow {
+          0% { transform: translateX(-100%); }
+          50% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
+        }
+        .animate-glow {
+          background-size: 200% auto;
+          animation: glow 6s ease-in-out infinite;
+        }
+      `}</style>
     </footer>
   );
 };

@@ -3,7 +3,9 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const userRoutes = require('./routes/users');
-const testRoutes = require('./routes/test'); // ✅ include test routes
+const logoutRoutes = require('./routes/logout'); // ✅ import logout route
+const testRoutes = require('./routes/test');     // ✅ test utilities
+const deviceRoutes = require('./api/devices');
 
 dotenv.config();
 
@@ -17,8 +19,10 @@ app.get('/', (req, res) => {
 });
 
 // API routes
+app.use('/api/devices', deviceRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/test', testRoutes); // ✅ /api/test POST and DELETE
+app.use('/api/logout', logoutRoutes); // ✅ added logout route
+app.use('/api/test', testRoutes);     // ✅ test-only tools
 
 // Start server
 const PORT = process.env.PORT || 8081;

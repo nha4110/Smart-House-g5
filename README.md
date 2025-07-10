@@ -75,3 +75,61 @@ cd backend
 node script/runseed.js
 -- to export data to export files --
 node script/export.js
+
+```
+
+# current project
+
+split the termial in 2
+
+## The first terminal
+cd backend2
+npm install
+make .env
+**
+PORT=8081
+DATABASE_URL=postgresql://neondb_owner:npg_xl1DVLsv3Gyj@ep-royal-firefly-a1q38ta4-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+**
+npm run dev
+
+## Second Terminal
+
+cd smart-app
+npm install
+make smart-app/vite-env.d.ts
+**
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
+// vite-env.d.ts
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly MODE: 'development' | 'production';
+  readonly VITE_API_URL?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+**
+
+Check if you have all of these file
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\.gitignore
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\index.html
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\package-lock.json
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\package.json
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\postcss.config.js
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\README.md
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\tailwind.config.ts
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\tsconfig.json
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\vite-env.d.ts
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\vite.config.ts
+C:\Users\Admin\Documents\GitHub\Smart-House-g5\.gitignore
+if do 
+npm run dev 
