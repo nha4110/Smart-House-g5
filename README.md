@@ -118,7 +118,7 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 **
-
+---
 Check if you have all of these file
 C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\.gitignore
 C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\index.html
@@ -131,5 +131,6 @@ C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\tsconfig.json
 C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\vite-env.d.ts
 C:\Users\Admin\Documents\GitHub\Smart-House-g5\smart-app\vite.config.ts
 C:\Users\Admin\Documents\GitHub\Smart-House-g5\.gitignore
+-----
 if do 
 npm run dev 
