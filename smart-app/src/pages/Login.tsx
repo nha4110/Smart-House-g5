@@ -19,16 +19,19 @@ export default function Login() {
     onSuccess: (user) => {
       localStorage.setItem('currentUser', user.username);
       toast({
-        title: "Login Successful",
+        title: 'Login Successful',
         description: `Welcome to SmartHome Control, ${user.username}`,
       });
+      // ✅ Force reload after login so App detects new localStorage value
       setLocation('/dashboard');
+      window.location.reload();
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Login Error:', error);
       toast({
-        title: "Login Failed",
-        description: "Failed to create user session",
-        variant: "destructive",
+        title: 'Login Failed',
+        description: error?.message || 'Failed to create user session',
+        variant: 'destructive',
       });
     },
   });
@@ -50,7 +53,6 @@ export default function Login() {
     createUserMutation.mutate(username);
   };
 
-  // Initialize with random name on mount
   useEffect(() => {
     generateRandomName();
   }, []);
