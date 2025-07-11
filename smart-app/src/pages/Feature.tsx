@@ -2,33 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Home as HomeIcon,
-  Shield,
-  Zap,
-  Brain,
-  Smartphone,
-  Leaf,
-  Star,
-  Heart,
-  Wind,
-  Moon,
-  Activity,
-  Clock,
-  Camera,
-  Phone,
-  Lock,
-  Lightbulb,
-  Thermometer,
-  ChevronDown,
-  Check,
-  ArrowUp,
-  Mic,
-  Gauge,
-  Battery,
-  Wifi,
-  Settings,
-} from "lucide-react";
+import { Home as HomeIcon, Shield, Zap, Brain, Smartphone, Leaf, Star, Heart, Wind, Moon, Activity, Clock, Camera, Phone, Lock, Lightbulb, Thermometer, ChevronDown, Check, ArrowUp, Mic, Gauge, Battery, Wifi, Settings } from "lucide-react";
 
 export default function Features() {
   const [activeSection, setActiveSection] = useState<number | null>(null);

@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Home as HomeIcon, Shield, Zap, Brain, Smartphone, Leaf, Star } from "lucide-react"; import Footer from "@/components/footer";
+import { Home as HomeIcon, Shield, Zap, Brain, Smartphone, Leaf, Star } from "lucide-react";
+import Footer from "@/components/footer";
+import styles from "./Home.module.css";
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState<number | null>(null);
@@ -33,89 +35,64 @@ export default function Home() {
     };
   }, []);
 
-  const sectionStyle = (index: number) =>
-    `transition-all duration-700 ease-in-out w-full mx-auto max-w-7xl my-8 ${
-      activeSection === index ? "scale-105 shadow-2xl z-10" : "scale-95 opacity-90"
-    }`;
+  const getSectionStyle = (index: number) =>
+    activeSection === index ? styles.sectionActive : styles.sectionDefault;
 
   const handleLogin = () => {
     navigate("/login");
   };
 
   return (
-    <div
-      className="min-h-screen w-full overflow-x-hidden flex flex-col items-center bg-fixed bg-gradient-to-b from-indigo-950 via-purple-950 to-blue-900"
-      style={{
-        backgroundImage:
-          "url('https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExenBzOGJnaTJhN2Z1YnNpaDVqNjlrZTZ5a3JrcDlia2R1NDc1NnY4byZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/FpBO8EpaM3X0nIDeBH/giphy.gif')",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-        backgroundBlendMode: "overlay",
-      }}
-    >
-      {/* Section 1: Hero */}
-      <section
-        className="transition-all duration-1000 ease-in-out flex flex-col items-center justify-center text-center rounded-[2rem] mt-[2px] mx-2 w-full max-w-[1800px] bg-gradient-to-b from-purple-900 to-blue-900 py-56 px-24 mb-48 border-2 border-purple-400/30 shadow-2xl relative overflow-hidden animate-glow"
-      >
-        <p className="text-lg text-purple-200 font-semibold mb-4 tracking-wide">
+    <div className={styles.mainContainer}>
+      {/* Section 1: Hero Section */}
+      <section className={styles.heroSection}>
+        <p className={styles.heroTagline}>
           Discover Intelligent Living
         </p>
-        <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-cyan-400 rounded-2xl flex items-center justify-center mb-8 shadow-lg">
+        <div className={styles.heroIcon}>
           <HomeIcon className="text-white text-4xl" />
         </div>
-        <h1 className="text-7xl font-extrabold text-white mb-6 leading-tight tracking-tight drop-shadow-xl">
+        <h1 className={styles.heroTitle}>
           Welcome to the Future of Living
         </h1>
-        <p className="text-2xl text-white/90 mb-10 max-w-3xl font-medium">
+        <p className={styles.heroDescription}>
           Smart Homes for a Better Tomorrow. Experience intelligent comfort, safety, and energy efficiency in every room with cutting-edge AI and IoT technology.
         </p>
         <div
-          className="relative w-[360px] h-16 rounded-full border-2 border-purple-400 flex overflow-hidden mb-4 bg-gradient-to-r from-purple-500 to-cyan-400"
+          className={styles.heroButtonContainer}
           onMouseLeave={() => setActiveSection(null)}
         >
           <div
-            className={`absolute top-0 left-0 h-full w-1/2 bg-gradient-to-r from-purple-600 to-cyan-500 transition-transform duration-300 rounded-full ${
-              activeSection === 0 ? "translate-x-full" : "translate-x-0"
+            className={`${styles.heroButtonSlider} ${
+              activeSection === 0 ? styles.heroButtonSliderActive : ""
             }`}
           />
           <button
             onClick={handleLogin}
-            className={`relative w-1/2 z-10 text-lg font-semibold transition-all duration-300 
-              ${
-                activeSection === 0
-                  ? "text-purple-300 bg-gradient-to-r from-cyan-500 to-purple-500"
-                  : "text-white bg-gradient-to-r from-purple-600 to-cyan-600"
-              }
-              hover:from-purple-400 hover:to-cyan-400 hover:text-white shadow-md rounded-full h-full`}
+            className={`${styles.heroButtonLeft} ${
+              activeSection === 0
+                ? styles.heroButtonLeftActive
+                : styles.heroButtonLeftDefault
+            } ${styles.heroButtonLeftHover}`}
             onMouseEnter={() => setActiveSection(null)}
-            style={{
-              borderRight: "1px solid rgba(192,132,252,0.3)",
-              borderRadius: "9999px 0 0 9999px",
-            }}
           >
             Get Started
           </button>
           <button
-            className={`relative w-1/2 z-10 text-lg font-semibold transition-all duration-300 
-              ${
-                activeSection === 0
-                  ? "text-white bg-gradient-to-r from-cyan-600 to-purple-600"
-                  : "text-purple-300 bg-gradient-to-r from-purple-400 to-cyan-400"
-              }
-              hover:from-cyan-500 hover:to-purple-500 hover:text-white shadow-md rounded-full h-full`}
+            className={`${styles.heroButtonRight} ${
+              activeSection === 0
+                ? styles.heroButtonRightActive
+                : styles.heroButtonRightDefault
+            } ${styles.heroButtonRightHover}`}
             onMouseEnter={() => setActiveSection(0)}
             onClick={() => navigate("/feature")}
-            style={{
-              borderLeft: "1px solid rgba(192,132,252,0.3)",
-              borderRadius: "0 9999px 9999px 0",
-            }}
           >
             Explore Features
           </button>
         </div>
-        <div className="absolute bottom-0 left-0 w-full h-24 overflow-hidden">
+        <div className={styles.heroWave}>
           <svg
-            className="w-full h-full"
+            className={styles.heroWaveSvg}
             viewBox="0 0 1440 100"
             preserveAspectRatio="none"
             fill="none"
@@ -124,7 +101,6 @@ export default function Home() {
             <path
               d="M0 100 C360 50 1080 50 1440 100 L1440 100 L0 100 Z"
               fill="url(#wave-gradient)"
-              className="animate-wave"
             />
             <defs>
               <linearGradient id="wave-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -134,34 +110,6 @@ export default function Home() {
             </defs>
           </svg>
         </div>
-        <style>
-          {`
-            @keyframes glow {
-              0% { box-shadow: 0 0 10px rgba(192, 132, 252, 0.5); }
-              50% { box-shadow: 0 0 20px rgba(192, 132, 252, 0.7); }
-              100% { box-shadow: 0 0 10px rgba(192, 132, 252, 0.5); }
-            }
-            .animate-glow {
-              animation: glow 3s ease-in-out infinite;
-            }
-            @keyframes pulse-glow {
-              0% { text-shadow: 0 0 5px rgba(192, 132, 252, 0.5); }
-              50% { text-shadow: 0 0 10px rgba(192, 132, 252, 0.7); }
-              100% { text-shadow: 0 0 5px rgba(192, 132, 252, 0.5); }
-            }
-            .animate-pulse-glow:hover {
-              animation: pulse-glow 1.5s ease-in-out infinite;
-            }
-            @keyframes wave {
-              0% { transform: translateY(0); }
-              50% { transform: translateY(10px); }
-              100% { transform: translateY(0); }
-            }
-            .animate-wave {
-              animation: wave 4s ease-in-out infinite;
-            }
-          `}
-        </style>
       </section>
 
       {/* Section 2: Combined Smart Living + Features */}
@@ -170,32 +118,32 @@ export default function Home() {
         ref={(el) => {
           sectionRefs.current[1] = el;
         }}
-        className={sectionStyle(1)}
+        className={getSectionStyle(1)}
       >
-        <Card className="w-full max-w-[95%] mx-auto bg-gradient-to-r from-purple-900 to-blue-900 border-[2px] border-purple-400/30 shadow-2xl rounded-3xl relative overflow-hidden">
-          <CardContent className="py-16 px-12 flex flex-col items-center gap-12 relative">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-12 w-full">
-              <div className="flex-1">
-                <h2 className="text-5xl font-extrabold text-white mb-6 tracking-tight">
+        <Card className={styles.smartLivingCard}>
+          <CardContent className={styles.smartLivingContent}>
+            <div className={styles.smartLivingTextContent}>
+              <div className={styles.smartLivingTextSection}>
+                <h2 className={styles.smartLivingTitle}>
                   Industry 4.0 Smart Living
                 </h2>
-                <p className="text-lg text-white/90 mb-6 leading-relaxed font-medium">
+                <p className={styles.smartLivingDescription}>
                   Industry 4.0 transforms your home into an intelligent ecosystem powered by AI, IoT, and advanced automation. From adaptive lighting to predictive climate control, your space anticipates your needs.
                 </p>
-                <p className="text-lg text-white/90 leading-relaxed font-medium">
+                <p className={styles.smartLivingDescription}>
                   Enjoy enhanced comfort, reduced energy costs, and robust security with systems that learn and evolve with your lifestyle, delivering a seamless and sustainable living experience.
                 </p>
               </div>
-              <div className="flex-1 max-w-[420px]">
+              <div className={styles.smartLivingImageSection}>
                 <img
                   src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExa2x4cmc1b214c2E5NXllMWJnbzlhd2w3NHpza3FnazN0eWZsemY2MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ZdOfhOXsOxG8ck7TJ8/giphy.gif"
                   alt="Smart Living Animation"
-                  className="rounded-xl w-full h-auto object-contain shadow-xl border border-purple-400/30 transition-transform duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(192,132,252,0.5)]"
+                  className={styles.smartLivingImage}
                 />
               </div>
             </div>
 
-            <div className="w-full my-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className={styles.featuresGrid}>
               {[
                 {
                   icon: <Shield className="text-white" />,
@@ -236,31 +184,20 @@ export default function Home() {
               ].map(({ icon, title, gradient, text }, index) => (
                 <Card
                   key={index}
-                  className={`transition-transform duration-500 hover:scale-105 hover:shadow-lg rounded-xl overflow-hidden border-2 border-purple-400/30 bg-gradient-to-br ${gradient} animate-slide-in`}
+                  className={`${styles.featureCard} ${styles.animateSlideIn} bg-gradient-to-br ${gradient}`}
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <CardContent className="p-6 text-white text-center h-[180px] flex flex-col justify-center">
-                    <div className="w-14 h-14 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-2">
+                  <CardContent className={styles.featureCardContent}>
+                    <div className={styles.featureIcon}>
                       {icon}
                     </div>
-                    <h3 className="text-lg font-semibold mb-2 drop-shadow-md">{title}</h3>
-                    <p className="text-sm drop-shadow-sm px-2 font-medium">{text}</p>
+                    <h3 className={styles.featureTitle}>{title}</h3>
+                    <p className={styles.featureDescription}>{text}</p>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </CardContent>
-          <style>
-            {`
-              @keyframes slide-in {
-                from { transform: translateY(20px); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
-              }
-              .animate-slide-in {
-                animation: slide-in 0.5s ease-out forwards;
-              }
-            `}
-          </style>
         </Card>
       </section>
 
@@ -270,19 +207,16 @@ export default function Home() {
         ref={(el) => {
           sectionRefs.current[2] = el;
         }}
-        className="w-screen border-y border-purple-400/30 py-16 bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-800 text-white shadow-2xl backdrop-blur-3xl my-8 relative overflow-hidden"
+        className={`${styles.iconStripSection} group`}
       >
-        <h2 className="text-4xl font-extrabold mb-4 text-center tracking-tight">
+        <h2 className={styles.iconStripTitle}>
           Seamlessly Integrates with Your Favorite Brands
         </h2>
-        <p className="text-lg mb-12 text-center text-white/90 font-medium max-w-3xl mx-auto">
+        <p className={styles.iconStripDescription}>
           Our platform ensures effortless compatibility with leading smart home ecosystems, delivering a unified and intuitive experience.
         </p>
-        <div className="relative w-full overflow-hidden h-36 group">
-          <div
-            className="absolute flex gap-12 animate-scroll-x items-center h-full px-12 whitespace-nowrap group-hover:pause-animation"
-            style={{ animationDelay: "-22.5s" }} // Start in the middle of the animation
-          >
+        <div className={styles.iconStripContainer}>
+          <div className={`${styles.iconStripScroll} ${styles.animateScrollX} group-hover:${styles.pauseAnimation}`}>
             {[
               "🍎", "📱", "🔒", "🌿", "📡",
               "💡", "🎛️", "📶", "🎧", "📷",
@@ -299,32 +233,14 @@ export default function Home() {
             ].map((icon, index) => (
               <div
                 key={index}
-                className="text-4xl bg-white/10 rounded-2xl p-4 shadow-xl backdrop-blur-md border border-purple-400/30 transform hover:scale-110 transition-all duration-300"
+                className={styles.iconStripIcon}
               >
                 {icon}
               </div>
             ))}
           </div>
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-purple-900/50 via-transparent to-blue-800/50 pointer-events-none" />
+          <div className={styles.iconStripOverlay} />
         </div>
-        <style>
-          {`
-            @keyframes scroll-x {
-              0% { transform: translateX(100%); }
-              100% { transform: translateX(-100%); }
-            }
-            .animate-scroll-x {
-              animation: scroll-x 45s linear infinite;
-            }
-            .group:hover .pause-animation {
-              animation-play-state: paused;
-            }
-            section[data-index="2"] {
-              transform: translateY(0);
-              transition: transform 0.3s ease-out;
-            }
-          `}
-        </style>
       </section>
 
       {/* Section 4: CTA */}
@@ -333,36 +249,25 @@ export default function Home() {
         ref={(el) => {
           sectionRefs.current[3] = el;
         }}
-        className={sectionStyle(3)}
+        className={getSectionStyle(3)}
       >
-        <div className="rounded-3xl bg-gradient-to-br from-purple-900 to-blue-800 text-white shadow-xl p-12 py-32 border border-purple-400/30 backdrop-blur-3xl min-h-[500px] flex flex-col justify-center relative overflow-hidden">
-          <h2 className="text-4xl font-extrabold mb-4 text-purple-200 drop-shadow-xl text-center tracking-tight">
+        <div className={styles.ctaSection}>
+          <h2 className={styles.ctaTitle}>
             Ready to Transform Your Home?
           </h2>
-          <p className="text-xl mb-8 text-center text-white/90 font-medium max-w-2xl mx-auto">
+          <p className={styles.ctaDescription}>
             Join thousands of homeowners who have already embraced intelligent living.
           </p>
-          <div className="flex justify-center">
+          <div className={styles.ctaButtonContainer}>
             <Button
               onClick={handleLogin}
               variant="secondary"
               size="lg"
-              className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:from-purple-600 hover:to-cyan-600 px-10 py-4 text-lg rounded-full shadow-lg transform hover:scale-105 transition-all duration-300"
+              className={styles.ctaButton}
             >
               Start Your Smart Home Journey
             </Button>
           </div>
-          <style>
-            {`
-              @keyframes particle {
-                0% { background-position: 0 0; }
-                100% { background-position: 20px 20px; }
-              }
-              .animate-particle {
-                animation: particle 10s linear infinite;
-              }
-            `}
-          </style>
         </div>
       </section>
 
@@ -372,13 +277,13 @@ export default function Home() {
         ref={(el) => {
           sectionRefs.current[4] = el;
         }}
-        className={sectionStyle(4)}
+        className={getSectionStyle(4)}
       >
-        <div className="w-full max-w-[95%] mx-auto bg-gradient-to-r from-purple-900/20 to-blue-900/20 backdrop-blur-2xl border-[2px] border-purple-400/30 shadow-2xl rounded-3xl py-16 px-12">
-          <h2 className="text-4xl font-extrabold text-white mb-8 text-center tracking-tight">
+        <div className={styles.testimonialsSection}>
+          <h2 className={styles.testimonialsTitle}>
             What Our Users Say
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className={styles.testimonialsGrid}>
             {[
               {
                 name: "Alex Johnson",
@@ -398,21 +303,21 @@ export default function Home() {
             ].map(({ name, quote, rating }, index) => (
               <Card
                 key={index}
-                className="bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 backdrop-blur-md border-2 border-purple-400/30 rounded-xl transition-transform duration-500 hover:scale-105"
+                className={styles.testimonialCard}
               >
-                <CardContent className="p-6 text-white flex flex-col items-center">
-                  <div className="flex mb-4">
+                <CardContent className={styles.testimonialContent}>
+                  <div className={styles.testimonialStars}>
                     {[...Array(5)].map((_, j) => (
                       <Star
                         key={j}
-                        className={`w-5 h-5 ${
-                          j < rating ? "text-yellow-400 fill-yellow-400" : "text-white/30"
+                        className={`${styles.testimonialStar} ${
+                          j < rating ? styles.testimonialStarFilled : styles.testimonialStarEmpty
                         }`}
                       />
                     ))}
                   </div>
-                  <p className="text-sm text-white/90 mb-4 text-center font-medium">{quote}</p>
-                  <p className="text-lg font-semibold text-purple-200">{name}</p>
+                  <p className={styles.testimonialQuote}>{quote}</p>
+                  <p className={styles.testimonialName}>{name}</p>
                 </CardContent>
               </Card>
             ))}
