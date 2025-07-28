@@ -1,18 +1,19 @@
--- ✅ Keep Existing Users Table
+-- ✅ Drop Old Tables
 DROP TABLE IF EXISTS rfid_access, event_logs, automation_rules, sensor_data, devices CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
+-- ✅ Users Table
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   username VARCHAR UNIQUE NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ✅ Limit to 3 users
+-- ✅ Limit to 5 users
 CREATE OR REPLACE FUNCTION user_login_limit()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF (SELECT COUNT(*) FROM users) >= 3 THEN
+  IF (SELECT COUNT(*) FROM users) >= 5 THEN
     RAISE EXCEPTION 'Maximum number of users reached' USING ERRCODE = 'P0001';
   END IF;
   RETURN NEW;
@@ -29,14 +30,15 @@ EXECUTE FUNCTION user_login_limit();
 -- ✅ Devices Table
 CREATE TABLE devices (
   device_id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,               -- e.g., "Living Room Light"
-  type TEXT NOT NULL,               -- e.g., "window", "sensor", "lock", "button"
-  location TEXT NOT NULL,           -- e.g., "kitchen"
-  status TEXT DEFAULT 'inactive',   -- "on", "off", "open", "closed"
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  location TEXT NOT NULL,
+  module_name TEXT,
+  status TEXT DEFAULT 'inactive',
   last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ✅ Sensor Data (optional logs)
+-- ✅ Sensor Data Table
 CREATE TABLE sensor_data (
   sensor_id SERIAL PRIMARY KEY,
   device_id INTEGER REFERENCES devices(device_id),
@@ -46,25 +48,48 @@ CREATE TABLE sensor_data (
   recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ✅ Automation Rules
+-- ✅ Automation Rules Table
 CREATE TABLE automation_rules (
   rule_id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,                -- "Rainy Day Auto Close"
+  name TEXT NOT NULL,
   description TEXT,
   is_active BOOLEAN DEFAULT TRUE,
-  trigger_type TEXT,                -- "rain", "humidity", "manual"
-  action TEXT                       -- "close_windows", etc.
+  trigger_type TEXT,
+  action TEXT
 );
 
--- ✅ Event Logs
+-- ✅ Event Logs Table (FIXED)
 CREATE TABLE event_logs (
   event_id SERIAL PRIMARY KEY,
   device_id INTEGER REFERENCES devices(device_id),
-  event_type TEXT,                  -- "opened", "locked", etc.
-  details TEXT,
-  triggered_by TEXT,                -- "user", "rule", "sensor"
+  event_type TEXT DEFAULT 'state_change',
+  details JSONB, -- 💡 store state object here
+  triggered_by TEXT DEFAULT 'simulation',
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ✅ Limit Event Logs to 20 Per Device (Fixed)
+CREATE OR REPLACE FUNCTION enforce_event_log_limit()
+RETURNS TRIGGER AS $$
+BEGIN
+  DELETE FROM event_logs
+  WHERE device_id = NEW.device_id
+  AND event_id NOT IN (
+    SELECT event_id FROM event_logs
+    WHERE device_id = NEW.device_id
+    ORDER BY timestamp DESC
+    LIMIT 20
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS event_log_limit_trigger ON event_logs;
+
+CREATE TRIGGER event_log_limit_trigger
+AFTER INSERT ON event_logs
+FOR EACH ROW
+EXECUTE FUNCTION enforce_event_log_limit();
 
 -- ✅ RFID Access Table
 CREATE TABLE rfid_access (

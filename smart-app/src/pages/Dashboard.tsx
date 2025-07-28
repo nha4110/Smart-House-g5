@@ -5,6 +5,7 @@ import { module1Devices } from '@/components/ui/module1';
 import { module2Devices } from '@/components/ui/module2';
 import { module3Devices } from '@/components/ui/module3';
 import { module4Devices } from '@/components/ui/module4';
+import DevicePopup from '@/components/ui/DevicePopup';
 
 interface Device {
   device_id: number;
@@ -12,6 +13,7 @@ interface Device {
   type: string;
   location: string;
   status: string;
+  module: string;
   last_updated: string;
 }
 
@@ -25,11 +27,12 @@ interface TemplateDevice {
 const addDefaultStatus = (devices: Omit<TemplateDevice, 'status'>[]): TemplateDevice[] =>
   devices.map((d) => ({ ...d, status: 'off' }));
 
-const deviceTemplates: TemplateDevice[] = [
-  ...addDefaultStatus(module1Devices),
-  ...addDefaultStatus(module2Devices),
-  ...addDefaultStatus(module3Devices),
-  ...addDefaultStatus(module4Devices),
+// Combine and tag each template with module name
+const moduleTaggedTemplates = [
+  ...addDefaultStatus(module1Devices).map(d => ({ ...d, module: 'module1' })),
+  ...addDefaultStatus(module2Devices).map(d => ({ ...d, module: 'module2' })),
+  ...addDefaultStatus(module3Devices).map(d => ({ ...d, module: 'module3' })),
+  ...addDefaultStatus(module4Devices).map(d => ({ ...d, module: 'module4' })),
 ];
 
 const predefinedLocations = ["Living Room", "Bedroom", "Kitchen", "Bathroom", "Toilet", "Drying Porch", "Porch"];
@@ -37,17 +40,22 @@ const predefinedLocations = ["Living Room", "Bedroom", "Kitchen", "Bathroom", "T
 export default function Dashboard() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<number | null>(null);
   const [templateName, setTemplateName] = useState('');
-  const [description, setDescription] = useState('');
   const [templateType, setTemplateType] = useState('');
+  const [description, setDescription] = useState('');
   const [customLabel, setCustomLabel] = useState('');
+  const [moduleTag, setModuleTag] = useState('');
   const [newDevice, setNewDevice] = useState<Omit<Device, 'device_id' | 'last_updated'>>({
     name: '',
     type: '',
     location: '',
     status: 'off',
+    module: '',
   });
 
+
+  // Fetch devices on mount
   useEffect(() => {
     axios.get('/api/devices')
       .then(res => setDevices(res.data))
@@ -56,7 +64,16 @@ export default function Dashboard() {
 
   const handleAdd = () => setShowModal(true);
 
-  const isFormValid = templateName && newDevice.type && newDevice.location;
+  const resetForm = () => {
+    setTemplateName('');
+    setTemplateType('');
+    setCustomLabel('');
+    setDescription('');
+    setModuleTag('');
+    setNewDevice({ name: '', type: '', location: '', status: 'off', module: '' });
+  };
+
+  const isFormValid = templateName && newDevice.type && newDevice.location && newDevice.module;
 
   const confirmAddDevice = async () => {
     if (!isFormValid) {
@@ -66,35 +83,41 @@ export default function Dashboard() {
 
     const finalName = customLabel ? `${templateName} #${customLabel}` : templateName;
     try {
-      const response = await axios.post('/api/devices', { ...newDevice, name: finalName });
+      const response = await axios.post('/api/devices', {
+        ...newDevice,
+        name: finalName,
+      });
       setDevices(prev => [...prev, response.data]);
       setShowModal(false);
-      setTemplateName('');
-      setTemplateType('');
-      setCustomLabel('');
-      setDescription('');
-      setNewDevice({ name: '', type: '', location: '', status: 'off' });
+      resetForm();
     } catch (err) {
       console.error('Failed to add device', err);
-      alert('Failed to add device. Check backend/server logs.');
+      alert('Failed to add device. Please check the backend logs.');
     }
   };
-
-  const groupedDevices: Record<string, Device[]> = devices.reduce((acc: Record<string, Device[]>, dev) => {
-    acc[dev.location] = acc[dev.location] || [];
-    acc[dev.location].push(dev);
-    return acc;
-  }, {});
 
   const handleTemplateChange = (value: string) => {
     setTemplateName(value);
-    const selected = deviceTemplates.find((d) => d.name === value);
+    const selected = moduleTaggedTemplates.find((d) => d.name === value);
     if (selected) {
       setTemplateType(selected.type);
       setDescription(selected.function);
-      setNewDevice((prev) => ({ ...prev, type: selected.type, status: 'off' }));
+      setModuleTag(selected.module);
+      setNewDevice((prev) => ({
+        ...prev,
+        type: selected.type,
+        status: 'off',
+        module: selected.module,
+      }));
     }
   };
+
+  const groupedDevices: Record<string, Device[]> = devices.reduce((acc, device) => {
+    const location = device.location || 'Unassigned';
+    if (!acc[location]) acc[location] = [];
+    acc[location].push(device);
+    return acc;
+  }, {} as Record<string, Device[]>);
 
   return (
     <div className="space-y-10">
@@ -102,9 +125,7 @@ export default function Dashboard() {
       <header className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Smart Home Dashboard</h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage and control your smart home devices
-          </p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage and control your smart home devices</p>
         </div>
         <button
           onClick={handleAdd}
@@ -114,16 +135,21 @@ export default function Dashboard() {
         </button>
       </header>
 
-      {/* Grouped Devices */}
+      {/* Grouped Devices by Location */}
       {Object.entries(groupedDevices).map(([location, locationDevices]) => (
         <section key={location} className="space-y-4">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{location}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {locationDevices.map((device) => (
-              <div key={device.device_id} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md">
+              <div
+                key={device.device_id}
+                onClick={() => setSelectedDeviceId(device.device_id)}
+                className="cursor-pointer bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md hover:ring-2 hover:ring-blue-500"
+              >
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{device.name}</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Type: {device.type}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Status: {device.status}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Module: {device.module}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-500">
                   Last Updated: {new Date(device.last_updated).toLocaleString()}
                 </p>
@@ -133,13 +159,21 @@ export default function Dashboard() {
         </section>
       ))}
 
+      {/* Device Info Popup */}
+      {selectedDeviceId !== null && (
+        <DevicePopup
+          deviceId={selectedDeviceId}
+          onClose={() => setSelectedDeviceId(null)}
+        />
+      )}
+
       {/* Add Device Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-lg w-full max-w-md space-y-4 animate-fadeIn">
             <h4 className="text-lg font-bold text-gray-900 dark:text-white">Add New Device</h4>
 
-            {/* Template Dropdown */}
+            {/* Device Template */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Device Template</label>
               <select
@@ -148,13 +182,13 @@ export default function Dashboard() {
                 onChange={(e) => handleTemplateChange(e.target.value)}
               >
                 <option value="">Select a Device</option>
-                {deviceTemplates.map((d, i) => (
+                {moduleTaggedTemplates.map((d, i) => (
                   <option key={i} value={d.name}>{d.name}</option>
                 ))}
               </select>
             </div>
 
-            {/* Custom Name */}
+            {/* Custom Label */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Custom Label</label>
               <input
@@ -181,16 +215,20 @@ export default function Dashboard() {
               </select>
             </div>
 
-            {/* Auto-filled Info */}
+            {/* Auto-filled Fields */}
             <div className="space-y-2">
               <div className="text-sm text-gray-600 dark:text-gray-400"><strong>Type:</strong> {templateType}</div>
               {description && <div className="text-sm text-gray-500 dark:text-gray-300 italic">{description}</div>}
+              {moduleTag && <div className="text-sm text-gray-400">Module: <strong>{moduleTag}</strong></div>}
             </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 pt-4">
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  resetForm();
+                }}
                 className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-white"
               >
                 Cancel
