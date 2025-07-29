@@ -20,5 +20,5 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["src", "vite-env.d.ts", "api"]
+  "include": ["src", "vite-env.d.ts", "api", "../Backend2/api/sensorProcessor.js"]
 }

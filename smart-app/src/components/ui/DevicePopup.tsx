@@ -33,13 +33,26 @@ interface DeviceDetails {
   rules: Rule[];
 }
 
+interface DeviceBehavior {
+  device: string;
+  type?: string;
+  status?: string;
+  reason?: string;
+  reading?: { temperature?: number; humidity?: number };
+  message?: string;
+}
+
 export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
   const [device, setDevice] = useState<DeviceDetails | null>(null);
+  const [behavior, setBehavior] = useState<DeviceBehavior | null>(null);
   const [error, setError] = useState(false);
   const [isOn, setIsOn] = useState(false);
 
+  // Configure Axios base URL using Vite's environment variable
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
   useEffect(() => {
-    axios.get(`/api/device/${deviceId}`)
+    axios.get(`${API_BASE_URL}/api/device/${deviceId}`)
       .then(res => {
         const data = res.data;
 
@@ -58,6 +71,15 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
         setDevice(sanitized);
         setIsOn(sanitized.status.toLowerCase() === 'on');
         setError(false);
+
+        // Extract base device name (before #) and fetch behavior
+        const deviceName = sanitized.name.split('#')[0].trim();
+        axios.get(`${API_BASE_URL}/api/device-behavior/${encodeURIComponent(deviceName)}`)
+          .then(res => setBehavior(res.data))
+          .catch(err => {
+            console.error('Error fetching device behavior:', err);
+            setBehavior({ device: deviceName, message: 'Failed to fetch behavior' });
+          });
       })
       .catch(err => {
         console.error('Error fetching device info:', err);
@@ -67,7 +89,7 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
 
   const toggleDevice = async (enabled: boolean) => {
     try {
-      await axios.put(`/api/device/${deviceId}/status`, {
+      await axios.put(`${API_BASE_URL}/api/device/${deviceId}/status`, {
         status: enabled ? 'on' : 'off',
       });
       setIsOn(enabled);
@@ -80,7 +102,7 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
   const deleteDevice = async () => {
     if (!confirm('Are you sure you want to delete this device?')) return;
     try {
-      await axios.delete(`/api/device/${deviceId}`);
+      await axios.delete(`${API_BASE_URL}/api/device/${deviceId}`);
       onClose();
     } catch (err) {
       console.error('Error deleting device:', err);
@@ -108,7 +130,6 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
   return (
     <div className="fixed inset-0 flex justify-center items-center z-50">
       <div className="bg-zinc-900 border border-white rounded-2xl shadow-2xl p-6 max-w-6xl w-full animate-fadeIn space-y-4 text-white">
-
         {/* Device Name Header */}
         <div className="flex justify-center">
           <div className="bg-zinc-800 text-white font-semibold rounded-lg px-6 py-3 text-xl text-center shadow-md border border-zinc-700">
@@ -118,7 +139,6 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
 
         {/* Main Grid Layout */}
         <div className="grid grid-cols-2 grid-rows-[1fr_1fr_auto] gap-4 h-[600px]">
-
           {/* Device Info */}
           <div className="col-span-1">
             <div className="bg-zinc-800 p-4 rounded-lg shadow-inner text-sm h-full space-y-1 border border-zinc-700">
@@ -128,6 +148,12 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
               <p><strong>Location:</strong> {String(device.location)}</p>
               <p><strong>Status:</strong> {String(device.status)}</p>
               <p><strong>Last Updated:</strong> {new Date(device.last_updated).toLocaleString()}</p>
+              {behavior && (
+                <>
+                  <p><strong>Behavior Status:</strong> {behavior.status || behavior.reading ? `${behavior.reading?.temperature}°C, ${behavior.reading?.humidity}%` : behavior.message || 'N/A'}</p>
+                  <p><strong>Reason:</strong> {behavior.reason || behavior.message || 'N/A'}</p>
+                </>
+              )}
             </div>
           </div>
 
