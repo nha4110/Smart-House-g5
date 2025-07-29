@@ -15,6 +15,8 @@ router.post('/', async (req, res) => {
       [temperature, humidity, rain_detected]
     );
 
+    console.log('Inserted new sensor data, old data deleted by trigger:', result.rows[0]);
+
     res.json({
       message: '✅ Simulated sensor data inserted',
       data: {

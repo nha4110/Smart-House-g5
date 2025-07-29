@@ -1,3 +1,4 @@
+
 -- ✅ Drop Old Tables
 DROP TABLE IF EXISTS rfid_access, event_logs, automation_rules, sensor_data, global_sensor_data, devices CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -47,6 +48,22 @@ CREATE TABLE global_sensor_data (
   rain_detected BOOLEAN,
   recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ✅ Trigger to ensure only one row in global_sensor_data
+CREATE OR REPLACE FUNCTION enforce_single_row_global_sensor_data()
+RETURNS TRIGGER AS $$
+BEGIN
+  DELETE FROM global_sensor_data;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS single_row_trigger ON global_sensor_data;
+
+CREATE TRIGGER single_row_trigger
+BEFORE INSERT ON global_sensor_data
+FOR EACH ROW
+EXECUTE FUNCTION enforce_single_row_global_sensor_data();
 
 -- ✅ Automation Rules Table
 CREATE TABLE automation_rules (
