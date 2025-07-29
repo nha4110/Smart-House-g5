@@ -1,5 +1,5 @@
 -- ✅ Drop Old Tables
-DROP TABLE IF EXISTS rfid_access, event_logs, automation_rules, sensor_data, devices CASCADE;
+DROP TABLE IF EXISTS rfid_access, event_logs, automation_rules, sensor_data, global_sensor_data, devices CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
 -- ✅ Users Table
@@ -38,10 +38,10 @@ CREATE TABLE devices (
   last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ✅ Sensor Data Table
-CREATE TABLE sensor_data (
+-- ✅ Renamed Global Sensor Data Table (no device_id)
+CREATE TABLE global_sensor_data (
   sensor_id SERIAL PRIMARY KEY,
-  device_id INTEGER REFERENCES devices(device_id),
+  sensor_type TEXT NOT NULL,       -- e.g., 'climate', 'rain', etc.
   temperature FLOAT,
   humidity FLOAT,
   rain_detected BOOLEAN,
@@ -58,17 +58,17 @@ CREATE TABLE automation_rules (
   action TEXT
 );
 
--- ✅ Event Logs Table (FIXED)
+-- ✅ Event Logs Table (linked to devices)
 CREATE TABLE event_logs (
   event_id SERIAL PRIMARY KEY,
   device_id INTEGER REFERENCES devices(device_id),
   event_type TEXT DEFAULT 'state_change',
-  details JSONB, -- 💡 store state object here
+  details JSONB,
   triggered_by TEXT DEFAULT 'simulation',
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ✅ Limit Event Logs to 20 Per Device (Fixed)
+-- ✅ Limit Event Logs to 20 Per Device
 CREATE OR REPLACE FUNCTION enforce_event_log_limit()
 RETURNS TRIGGER AS $$
 BEGIN
