@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// Debug log to verify pool import
 console.log('Pool imported in sensorProcessor:', pool ? 'Defined' : 'Undefined');
 
 async function getLatestGlobalSensorData() {
@@ -26,18 +25,56 @@ async function getLatestGlobalSensorData() {
   }
 }
 
-async function getDeviceIdByName(deviceName) {
+async function getDeviceInfo(deviceId, deviceName, isAutoSimulation = false) {
   try {
-    const result = await pool.query(
-      `SELECT device_id FROM devices WHERE name ILIKE $1 || '%' LIMIT 1`,
-      [deviceName]
-    );
-    if (!result.rows[0]) {
-      throw new Error(`Device not found: ${deviceName}`);
+    let result;
+    if (deviceId) {
+      result = await pool.query(
+        `SELECT device_id, name, status, last_updated FROM devices WHERE device_id = $1`,
+        [deviceId]
+      );
+    } else {
+      result = await pool.query(
+        `SELECT device_id, name, status, last_updated FROM devices WHERE name ILIKE $1 || '%' LIMIT 1`,
+        [deviceName]
+      );
     }
-    return result.rows[0].device_id;
+    if (!result.rows[0]) {
+      throw new Error(`Device not found: ${deviceId || deviceName}`);
+    }
+    const deviceInfo = result.rows[0];
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Device info for ${deviceId || deviceName} (auto: ${isAutoSimulation}):`, {
+        device_id: deviceInfo.device_id,
+        name: deviceInfo.name,
+        status: deviceInfo.status,
+        last_updated: deviceInfo.last_updated,
+      });
+    }
+
+    if (deviceInfo.status.toLowerCase() !== 'on') {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Skipping behavior for device_id ${deviceInfo.device_id}: device is ${deviceInfo.status}`);
+      }
+      return { device: deviceInfo.name, message: `Device is ${deviceInfo.status}` };
+    }
+
+    if (isAutoSimulation) {
+      const now = new Date();
+      const lastUpdated = new Date(deviceInfo.last_updated);
+      const timeDiff = (now - lastUpdated) / 1000; // Seconds
+      if (timeDiff > 60) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Skipping auto-simulation for device_id ${deviceInfo.device_id}: not recently toggled`);
+        }
+        return { device: deviceInfo.name, message: 'Device not recently toggled on' };
+      }
+    }
+
+    return deviceInfo;
   } catch (err) {
-    console.error('Error in getDeviceIdByName:', err.message);
+    console.error('Error in getDeviceInfo:', err.message);
     throw err;
   }
 }
@@ -58,14 +95,16 @@ async function shouldLogBehavior(deviceId, behavior) {
         lastDetails.reason === (behavior.reason || null) &&
         JSON.stringify(lastDetails.reading) === JSON.stringify(behavior.reading || null)
       ) {
-        console.log(`Skipping duplicate behavior log for device_id ${deviceId}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Skipping duplicate behavior log for device_id ${deviceId}`);
+        }
         return false;
       }
     }
     return true;
   } catch (err) {
     console.error('Error in shouldLogBehavior:', err.message);
-    return true; // Log if check fails
+    return true;
   }
 }
 
@@ -90,18 +129,24 @@ async function logBehaviorToEventLog(deviceId, behavior) {
   }
 }
 
-async function simulateBehavior(deviceName) {
+async function simulateBehavior(deviceName, deviceId = null, isAutoSimulation = false) {
   try {
+    const deviceInfo = await getDeviceInfo(deviceId, deviceName, isAutoSimulation);
+    
+    if ('message' in deviceInfo) {
+      return deviceInfo;
+    }
+
     const data = await getLatestGlobalSensorData();
     const now = new Date();
     const hour = now.getHours();
-
+    const baseDeviceName = deviceInfo.name.split('#')[0].trim();
     let behavior;
-    switch (deviceName) {
-      // Module 1 Devices
+
+    switch (baseDeviceName) {
       case 'DHT11 Sensor':
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'sensor',
           reading: {
             temperature: data.temperature,
@@ -114,7 +159,7 @@ async function simulateBehavior(deviceName) {
       case 'Air Conditioner':
         const shouldBeOnAC = !data.rain_detected && data.temperature > 30;
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'actuator',
           status: shouldBeOnAC ? 'on' : 'off',
           reason: shouldBeOnAC
@@ -128,7 +173,7 @@ async function simulateBehavior(deviceName) {
       case 'Dehumidifier':
         const shouldBeOnDH = data.humidity >= 72;
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'actuator',
           status: shouldBeOnDH ? 'on' : 'off',
           reason: shouldBeOnDH ? 'Humidity 72% or higher' : 'Humidity below 72%',
@@ -140,7 +185,7 @@ async function simulateBehavior(deviceName) {
       case 'Servo Motor (Window 2)':
         const shouldBeClosedWin = data.rain_detected || data.humidity > 72;
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'actuator',
           status: shouldBeClosedWin ? 'closed' : 'open',
           reason: shouldBeClosedWin
@@ -155,7 +200,7 @@ async function simulateBehavior(deviceName) {
       case 'Servo Motor (Main Door)':
         const isLocked = hour >= 20 || hour < 6;
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'actuator',
           status: isLocked ? 'locked' : 'unlocked',
           reason: isLocked
@@ -164,10 +209,9 @@ async function simulateBehavior(deviceName) {
         };
         break;
 
-      // Module 2 Devices
       case 'Rain Sensor':
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'sensor',
           status: data.rain_detected ? 'true' : 'false',
           reason: data.rain_detected ? 'Rain detected' : 'No rain detected',
@@ -177,7 +221,7 @@ async function simulateBehavior(deviceName) {
       case 'Servo Motor (Roof)':
       case 'Servo Motor (Door)':
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'actuator',
           status: data.rain_detected ? 'closed' : 'open',
           reason: data.rain_detected ? 'Rain detected' : 'No rain detected',
@@ -187,7 +231,7 @@ async function simulateBehavior(deviceName) {
       case 'Hot/Cold Water Tank':
         const shouldBeOnTank = data.temperature > 30 || data.temperature < 20;
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'actuator',
           status: shouldBeOnTank ? 'on' : 'off',
           reason: shouldBeOnTank
@@ -201,17 +245,16 @@ async function simulateBehavior(deviceName) {
       case 'LED Indicator':
         const tankStatus = data.temperature > 30 || data.temperature < 20 ? 'on' : 'off';
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'display',
           status: tankStatus,
           reason: `Reflecting Hot/Cold Water Tank status: ${tankStatus}`,
         };
         break;
 
-      // Module 3 Devices
       case 'Buttons':
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'input',
           message: 'Manual toggle input not simulated',
         };
@@ -219,7 +262,7 @@ async function simulateBehavior(deviceName) {
 
       case 'LED Indicators':
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'display',
           message: 'Device status display not simulated',
         };
@@ -227,17 +270,16 @@ async function simulateBehavior(deviceName) {
 
       case 'Lights':
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'actuator',
           status: 'off',
           reason: 'Manual toggle not simulated, default off',
         };
         break;
 
-      // Module 4 Devices
       case '4x4 Keypad':
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'input',
           message: 'Password input not simulated',
         };
@@ -246,7 +288,7 @@ async function simulateBehavior(deviceName) {
       case 'LCD 1602 Display':
         const doorStatus = hour >= 20 || hour < 6 ? 'locked' : 'unlocked';
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'display',
           status: doorStatus,
           reason: `Displaying Main Door status: ${doorStatus}`,
@@ -255,7 +297,7 @@ async function simulateBehavior(deviceName) {
 
       case 'RFID Reader':
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           type: 'input',
           message: 'Card scan not simulated',
         };
@@ -263,17 +305,19 @@ async function simulateBehavior(deviceName) {
 
       default:
         behavior = {
-          device: deviceName,
+          device: deviceInfo.name,
           message: 'No smart behavior logic found for this device',
         };
     }
 
-    // Fetch device_id and log behavior to event_logs
+    if (behavior.message) {
+      return behavior;
+    }
+
     try {
-      const deviceId = await getDeviceIdByName(deviceName);
-      await logBehaviorToEventLog(deviceId, behavior);
+      await logBehaviorToEventLog(deviceInfo.device_id, behavior);
     } catch (err) {
-      console.error(`Failed to log behavior for ${deviceName}:`, err.message);
+      console.error(`Failed to log behavior for ${deviceInfo.name}:`, err.message);
     }
 
     return behavior;
@@ -283,11 +327,13 @@ async function simulateBehavior(deviceName) {
   }
 }
 
-// API endpoint to get device behavior based on device name
-router.get('/device-behavior/:deviceName', async (req, res) => {
+router.get('/device-behavior/:identifier', async (req, res) => {
   try {
-    const deviceName = req.params.deviceName;
-    const behavior = await simulateBehavior(deviceName);
+    const { identifier } = req.params;
+    const isDeviceId = !isNaN(parseInt(identifier));
+    const behavior = isDeviceId
+      ? await simulateBehavior(null, parseInt(identifier))
+      : await simulateBehavior(identifier);
     res.json(behavior);
   } catch (err) {
     console.error('GET /device-behavior error:', err.message);

@@ -48,72 +48,83 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
   const [error, setError] = useState(false);
   const [isOn, setIsOn] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
+  const fetchDeviceData = async (controller: AbortController) => {
+    try {
+      const res = await axios.get(`/api/device/${deviceId}`, { signal: controller.signal });
+      if (!res.data) return;
+      const data = res.data;
 
-    axios.get(`/api/device/${deviceId}`, { signal: controller.signal })
-      .then(res => {
-        if (!isMounted) return;
-        const data = res.data;
-
-        // Sanitize values to ensure they're all strings
-        const sanitized: DeviceDetails = {
-          ...data,
-          name: String(data.name),
-          type: String(data.type),
-          location: String(data.location),
-          status: String(data.status),
-          last_updated: String(data.last_updated),
-          event_logs: Array.isArray(data.event_logs)
-            ? data.event_logs.map((log: EventLog) => {
-                let parsedDetails = log.details;
-                if (typeof log.details === 'string') {
-                  try {
-                    parsedDetails = JSON.parse(log.details);
-                  } catch (e) {
-                    console.error('Error parsing event log details:', e, log.details);
-                    parsedDetails = {};
-                  }
+      const sanitized: DeviceDetails = {
+        ...data,
+        name: String(data.name),
+        type: String(data.type),
+        location: String(data.location),
+        status: String(data.status),
+        last_updated: String(data.last_updated),
+        event_logs: Array.isArray(data.event_logs)
+          ? data.event_logs.map((log: EventLog) => {
+              let parsedDetails = log.details;
+              if (typeof log.details === 'string') {
+                try {
+                  parsedDetails = JSON.parse(log.details);
+                } catch (e) {
+                  console.error('Error parsing event log details:', e, log.details);
+                  parsedDetails = {};
                 }
-                return { ...log, details: parsedDetails };
-              })
-            : [],
-          rules: Array.isArray(data.rules) ? data.rules : [],
-        };
+              }
+              return { ...log, details: parsedDetails };
+            })
+          : [],
+        rules: Array.isArray(data.rules) ? data.rules : [],
+      };
 
-        console.log('Device data received:', sanitized);
+      console.log('Device data received:', sanitized);
+      setDevice(sanitized);
+      setIsOn(sanitized.status.toLowerCase() === 'on');
+      setError(false);
+    } catch (err) {
+      if (axios.isCancel(err)) return;
+      console.error('Error fetching device info:', err);
+      setError(true);
+    }
+  };
 
-        setDevice(sanitized);
-        setIsOn(sanitized.status.toLowerCase() === 'on');
-        setError(false);
+  const fetchBehavior = async (controller: AbortController) => {
+    try {
+      console.log('Fetching behavior for device_id:', deviceId);
+      const res = await axios.get(`/api/device-behavior/${deviceId}`, { signal: controller.signal });
+      console.log('Behavior response:', res.data);
+      setBehavior(res.data);
+      await fetchDeviceData(new AbortController());
+    } catch (err) {
+      if (axios.isCancel(err)) return;
+      console.error('Error fetching device behavior:', err);
+      setBehavior({ device: `ID ${deviceId}`, message: 'Failed to fetch behavior' });
+    }
+  };
 
-        // Extract base device name (before #) and fetch behavior
-        const deviceName = sanitized.name.split('#')[0].trim();
-        console.log('Fetching behavior for deviceName:', deviceName);
-        axios.get(`/api/device-behavior/${encodeURIComponent(deviceName)}`, { signal: controller.signal })
-          .then(res => {
-            if (!isMounted) return;
-            console.log('Behavior response:', res.data);
-            setBehavior(res.data);
-          })
-          .catch(err => {
-            if (axios.isCancel(err)) return;
-            console.error('Error fetching device behavior:', err);
-            setBehavior({ device: deviceName, message: 'Failed to fetch behavior' });
-          });
-      })
-      .catch(err => {
-        if (axios.isCancel(err)) return;
-        console.error('Error fetching device info:', err);
-        setError(true);
-      });
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchDeviceData(controller);
+
+    if (device?.status.toLowerCase() === 'on') {
+      fetchBehavior(controller);
+    }
 
     return () => {
-      isMounted = false;
       controller.abort();
     };
   }, [deviceId]);
+
+  useEffect(() => {
+    if (device?.status.toLowerCase() === 'on') {
+      const controller = new AbortController();
+      fetchBehavior(controller);
+      return () => controller.abort();
+    } else {
+      setBehavior({ device: device?.name || `ID ${deviceId}`, message: 'Device is off' });
+    }
+  }, [device?.status]);
 
   const toggleDevice = async (enabled: boolean) => {
     try {
@@ -121,7 +132,12 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
         status: enabled ? 'on' : 'off',
       });
       setIsOn(enabled);
-      setDevice(prev => prev ? { ...prev, status: enabled ? 'on' : 'off' } : prev);
+      setDevice(prev => prev ? { ...prev, status: enabled ? 'on' : 'off', last_updated: new Date().toISOString() } : prev);
+      if (enabled) {
+        await fetchBehavior(new AbortController());
+      } else {
+        setBehavior({ device: device?.name || `ID ${deviceId}`, message: 'Device is off' });
+      }
     } catch (err) {
       console.error('Error updating device status:', err);
     }
@@ -132,7 +148,7 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
     try {
       await axios.delete(`/api/device/${deviceId}`);
       onClose();
-      window.location.reload(); // Reset the page after successful deletion
+      window.location.reload();
     } catch (err) {
       console.error('Error deleting device:', err);
       alert('Failed to delete device. Please try again.');
@@ -160,16 +176,12 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
   return (
     <div className="fixed inset-0 flex justify-center items-center z-50">
       <div className="bg-zinc-900 border border-white rounded-2xl shadow-2xl p-6 max-w-6xl w-full animate-fadeIn space-y-4 text-white">
-        {/* Device Name Header */}
         <div className="flex justify-center">
           <div className="bg-zinc-800 text-white font-semibold rounded-lg px-6 py-3 text-xl text-center shadow-md border border-zinc-700">
             {String(device.name)}
           </div>
         </div>
-
-        {/* Main Grid Layout */}
         <div className="grid grid-cols-2 grid-rows-[1fr_1fr_auto] gap-4 h-[600px]">
-          {/* Device Info */}
           <div className="col-span-1">
             <div className="bg-zinc-800 p-4 rounded-lg shadow-inner text-sm h-full space-y-1 border border-zinc-700">
               <h4 className="font-semibold text-lg mb-2">Device Info</h4>
@@ -191,8 +203,6 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
               )}
             </div>
           </div>
-
-          {/* Event Log */}
           <div className="row-span-2 overflow-y-auto bg-zinc-800 p-4 rounded-lg text-sm border border-zinc-700">
             <h4 className="text-lg font-semibold mb-2">Event Log</h4>
             {device.event_logs.length === 0 ? (
@@ -226,8 +236,6 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
               </ul>
             )}
           </div>
-
-          {/* Rules */}
           <div className="bg-zinc-800 p-4 rounded-lg shadow-inner text-sm overflow-y-auto max-h-64 border border-zinc-700">
             <h4 className="text-lg font-semibold mb-2">Rules</h4>
             {device.rules.length === 0 ? (
@@ -249,8 +257,6 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
               </ul>
             )}
           </div>
-
-          {/* Bottom Right Controls */}
           <div className="col-start-2 flex justify-end items-end space-x-4">
             <div className="flex items-center space-x-2">
               <p>Turn device off/on</p>
@@ -265,14 +271,12 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
               </Switch>
               <span className="text-sm text-white">{isOn ? 'On' : 'Off'}</span>
             </div>
-
             <button
               onClick={deleteDevice}
               className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             >
               Delete
             </button>
-
             <button
               onClick={() => {
                 onClose();
