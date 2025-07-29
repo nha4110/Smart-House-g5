@@ -1,4 +1,3 @@
-
 -- ✅ Drop Old Tables
 DROP TABLE IF EXISTS rfid_access, event_logs, automation_rules, sensor_data, global_sensor_data, devices CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -65,9 +64,10 @@ BEFORE INSERT ON global_sensor_data
 FOR EACH ROW
 EXECUTE FUNCTION enforce_single_row_global_sensor_data();
 
--- ✅ Automation Rules Table
+-- ✅ Automation Rules Table (linked to devices)
 CREATE TABLE automation_rules (
   rule_id SERIAL PRIMARY KEY,
+  device_id INTEGER REFERENCES devices(device_id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
   is_active BOOLEAN DEFAULT TRUE,
@@ -78,7 +78,7 @@ CREATE TABLE automation_rules (
 -- ✅ Event Logs Table (linked to devices)
 CREATE TABLE event_logs (
   event_id SERIAL PRIMARY KEY,
-  device_id INTEGER REFERENCES devices(device_id),
+  device_id INTEGER REFERENCES devices(device_id) ON DELETE CASCADE,
   event_type TEXT DEFAULT 'state_change',
   details JSONB,
   triggered_by TEXT DEFAULT 'simulation',
@@ -108,9 +108,10 @@ AFTER INSERT ON event_logs
 FOR EACH ROW
 EXECUTE FUNCTION enforce_event_log_limit();
 
--- ✅ RFID Access Table
+-- ✅ RFID Access Table (linked to devices)
 CREATE TABLE rfid_access (
   access_id SERIAL PRIMARY KEY,
+  device_id INTEGER REFERENCES devices(device_id) ON DELETE CASCADE,
   card_uid TEXT,
   is_valid BOOLEAN DEFAULT TRUE,
   was_successful BOOLEAN,

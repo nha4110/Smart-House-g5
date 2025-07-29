@@ -18,6 +18,8 @@ const globalSensorDataRoutes = require('./api/globalSensorData');
 const eventLogRoutes = require('./api/eventLogs');
 const simulateRouter = require('./api/simulate');
 const sensorProcessor = require('./api/sensorProcessor');
+const automationRules = require('./api/automationRules');
+const rfidAccess = require('./api/rfidAccess');
 
 const app = express();
 app.use(cors());
@@ -38,6 +40,8 @@ app.use('/api/global-sensor-data', globalSensorDataRoutes);
 app.use('/api/event-logs', eventLogRoutes);
 app.use('/api/simulate', simulateRouter);
 app.use('/api', sensorProcessor);
+app.use('/api/rules', automationRules);
+app.use('/api/rfid', rfidAccess);
 
 // Enhanced auto-simulation
 async function runAutoSimulation() {

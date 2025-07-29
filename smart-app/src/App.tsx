@@ -1,3 +1,5 @@
+// smart-app/src/App.tsx
+
 import { useEffect, useState } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -8,7 +10,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { Header } from "@/components/layout/header";
 import { Navigation } from "@/components/layout/navigation";
-import { Footer } from "@/components/layout/footer";
+import Footer from "@/components/layout/footer"; // ✅ fixed import
 
 import Home from "@/pages/Home";
 import Feature from "@/pages/Feature";

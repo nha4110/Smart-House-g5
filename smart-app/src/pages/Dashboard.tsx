@@ -53,14 +53,37 @@ export default function Dashboard() {
     status: 'off',
     module: '',
   });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Fetch devices from API and update local storage
+  const fetchDevices = async () => {
+    try {
+      const res = await axios.get('/api/devices');
+      const fetchedDevices = res.data;
+      setDevices(fetchedDevices);
+      localStorage.setItem('devices', JSON.stringify(fetchedDevices));
+    } catch (err) {
+      console.error('Failed to fetch devices', err);
+    }
+  };
 
-  // Fetch devices on mount
+  // Load devices on mount
   useEffect(() => {
-    axios.get('/api/devices')
-      .then(res => setDevices(res.data))
-      .catch(err => console.error('Failed to fetch devices', err));
-  }, []);
+    // Load from local storage first
+    const storedDevices = localStorage.getItem('devices');
+    if (storedDevices) {
+      try {
+        const parsedDevices = JSON.parse(storedDevices);
+        if (Array.isArray(parsedDevices)) {
+          setDevices(parsedDevices);
+        }
+      } catch (err) {
+        console.error('Failed to parse devices from local storage', err);
+      }
+    }
+    // Fetch fresh data in the background
+    fetchDevices();
+  }, [refreshTrigger]);
 
   const handleAdd = () => setShowModal(true);
 
@@ -88,6 +111,7 @@ export default function Dashboard() {
         name: finalName,
       });
       setDevices(prev => [...prev, response.data]);
+      localStorage.setItem('devices', JSON.stringify([...devices, response.data]));
       setShowModal(false);
       resetForm();
     } catch (err) {
@@ -110,6 +134,11 @@ export default function Dashboard() {
         module: selected.module,
       }));
     }
+  };
+
+  const handlePopupClose = () => {
+    setSelectedDeviceId(null);
+    setRefreshTrigger(prev => prev + 1); // Trigger device refresh
   };
 
   const groupedDevices: Record<string, Device[]> = devices.reduce((acc, device) => {
@@ -163,7 +192,7 @@ export default function Dashboard() {
       {selectedDeviceId !== null && (
         <DevicePopup
           deviceId={selectedDeviceId}
-          onClose={() => setSelectedDeviceId(null)}
+          onClose={handlePopupClose}
         />
       )}
 
