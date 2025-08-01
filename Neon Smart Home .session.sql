@@ -10,22 +10,22 @@ CREATE TABLE users (
 );
 
 -- ✅ Limit to 5 users
-CREATE OR REPLACE FUNCTION user_login_limit()
+CREATE OR REPLACE FUNCTION enforce_user_limit()
 RETURNS TRIGGER AS $$
 BEGIN
   IF (SELECT COUNT(*) FROM users) >= 5 THEN
-    RAISE EXCEPTION 'Maximum number of users reached' USING ERRCODE = 'P0001';
+    RAISE EXCEPTION 'Maximum concurrent users reached. Please wait...' USING ERRCODE = 'P0001';
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS check_user_limit ON users;
+DROP TRIGGER IF EXISTS trigger_user_limit ON users;
 
-CREATE TRIGGER check_user_limit
+CREATE TRIGGER trigger_user_limit
 BEFORE INSERT ON users
 FOR EACH ROW
-EXECUTE FUNCTION user_login_limit();
+EXECUTE FUNCTION enforce_user_limit();
 
 -- ✅ Devices Table
 CREATE TABLE devices (
@@ -72,17 +72,20 @@ CREATE TABLE event_logs (
 CREATE OR REPLACE FUNCTION enforce_event_log_limit()
 RETURNS TRIGGER AS $$
 BEGIN
-  DELETE FROM event_logs
-  WHERE device_id = NEW.device_id
-  AND event_id NOT IN (
-    SELECT event_id FROM event_logs
+  WITH ranked AS (
+    SELECT event_id
+    FROM event_logs
     WHERE device_id = NEW.device_id
-    ORDER BY timestamp DESC
-    LIMIT 20
-  );
+    ORDER BY event_id DESC
+    OFFSET 20
+  )
+  DELETE FROM event_logs
+  WHERE event_id IN (SELECT event_id FROM ranked);
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 DROP TRIGGER IF EXISTS event_log_limit_trigger ON event_logs;
 
