@@ -11,8 +11,8 @@ async function simulateAllSensors() {
 
 // Run every 10 seconds if run standalone
 if (require.main === module) {
-  console.log('🚀 Starting sensor simulation every 600s...\n');
-  setInterval(simulateAllSensors, 60_000);
+  console.log('🚀 Starting sensor simulation every 10s...\n');
+  setInterval(simulateAllSensors, 10_000);
 }
 
 module.exports = simulateAllSensors;

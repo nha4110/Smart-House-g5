@@ -95,8 +95,8 @@ async function runAutoSimulation() {
 const PORT = process.env.PORT || 8081;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
-  console.log('🛠 Auto-simulation every 60s started...');
-  setInterval(runAutoSimulation, 60_000);
+  console.log('🛠 Auto-simulation every 10s started...');
+  setInterval(runAutoSimulation, 10_000);
   // Initial run after 5s to allow server startup
   setTimeout(runAutoSimulation, 5_000);
 });

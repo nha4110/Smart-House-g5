@@ -34,7 +34,7 @@ CREATE TABLE devices (
   type TEXT NOT NULL,
   location TEXT NOT NULL,
   module_name TEXT,
-  status TEXT DEFAULT 'inactive',
+  status TEXT DEFAULT 'off',
   last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

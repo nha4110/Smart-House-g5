@@ -17,7 +17,6 @@ import Feature from "@/pages/Feature";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Settings from "@/pages/Settings";
-import IoTConnection from "@/pages/iot-connection";
 
 function Router() {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
@@ -51,7 +50,6 @@ function Router() {
           <Route path="/" component={() => <Redirect to="/dashboard" />} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/settings" component={Settings} />
-          <Route path="/iot-connection" component={IoTConnection} />
           <Route path="/feature" component={Feature} />
         </Switch>
       </main>
