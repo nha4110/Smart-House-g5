@@ -289,6 +289,30 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
                     {behavior.reading
                       ? `${behavior.reading.temperature || 'N/A'}°C, ${behavior.reading.humidity || 'N/A'}%`
                       : behavior.status || behavior.message || 'N/A'}
+                    {!isOn && (device.name.toLowerCase().includes('main door')|| device.name.toLowerCase().includes('windows') || device.name.toLowerCase().includes('hot/cold water tank')) && (
+                      <button
+                        onClick={() => toggleDevice(true)}
+                        className="ml-2 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                      >
+                        Turn On
+                      </button>
+                    )}
+                    {!isOn && device.name.toLowerCase() === 'main door' && (
+                      <button
+                        onClick={() => toggleDevice(true)}
+                        className="ml-2 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                      >
+                        Turn On
+                      </button>
+                    )}
+                    {!isOn && device.name.toLowerCase() === 'hot/cold water tank' && (
+                      <button
+                        onClick={() => toggleDevice(true)}
+                        className="ml-2 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                      >
+                        Turn On
+                      </button>
+                    )}
                   </p>
                   <p><strong>Reason:</strong> {behavior.reason || behavior.message || 'N/A'}</p>
                 </>
