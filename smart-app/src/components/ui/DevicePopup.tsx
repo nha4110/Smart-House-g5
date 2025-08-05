@@ -213,19 +213,6 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
     }
   };
 
-  const fetchBehavior = async (controller: AbortController) => {
-    try {
-      console.log('Fetching behavior for device_id:', deviceId);
-      const res = await axios.get(`/api/device-behavior/${deviceId}`, { signal: controller.signal });
-      console.log('Behavior response:', res.data);
-      setBehavior(res.data);
-    } catch (err) {
-      if (axios.isCancel(err)) return;
-      console.error('Error fetching device behavior:', err);
-      setBehavior({ device: `ID ${deviceId}`, message: 'Failed to fetch behavior' });
-    }
-  };
-
   const deleteDevice = async () => {
     if (!confirm('Are you sure you want to delete this device?')) return;
     try {
