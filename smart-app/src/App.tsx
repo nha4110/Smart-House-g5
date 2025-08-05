@@ -1,3 +1,5 @@
+// smart-app/src/App.tsx
+
 import { useEffect, useState } from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -8,14 +10,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { Header } from "@/components/layout/header";
 import { Navigation } from "@/components/layout/navigation";
-import { Footer } from "@/components/layout/footer";
+import Footer from "@/components/layout/footer"; // ✅ fixed import
 
 import Home from "@/pages/Home";
 import Feature from "@/pages/Feature";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Settings from "@/pages/Settings";
-import IoTConnection from "@/pages/iot-connection";
 
 function Router() {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
@@ -49,7 +50,6 @@ function Router() {
           <Route path="/" component={() => <Redirect to="/dashboard" />} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/settings" component={Settings} />
-          <Route path="/iot-connection" component={IoTConnection} />
           <Route path="/feature" component={Feature} />
         </Switch>
       </main>

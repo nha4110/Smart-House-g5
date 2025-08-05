@@ -23,18 +23,7 @@ export function Header({ currentUser }: HeaderProps) {
                 Welcome, {currentUser}
               </span>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
-            >
-              {isDarkMode ? (
-                <Sun className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-              ) : (
-                <Moon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-              )}
-            </Button>
+
           </div>
         </div>
       </div>

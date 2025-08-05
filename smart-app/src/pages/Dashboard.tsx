@@ -53,14 +53,37 @@ export default function Dashboard() {
     status: 'off',
     module: '',
   });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Fetch devices from API and update local storage
+  const fetchDevices = async () => {
+    try {
+      const res = await axios.get('/api/devices');
+      const fetchedDevices = res.data;
+      setDevices(fetchedDevices);
+      localStorage.setItem('devices', JSON.stringify(fetchedDevices));
+    } catch (err) {
+      console.error('Failed to fetch devices', err);
+    }
+  };
 
-  // Fetch devices on mount
+  // Load devices on mount
   useEffect(() => {
-    axios.get('/api/devices')
-      .then(res => setDevices(res.data))
-      .catch(err => console.error('Failed to fetch devices', err));
-  }, []);
+    // Load from local storage first
+    const storedDevices = localStorage.getItem('devices');
+    if (storedDevices) {
+      try {
+        const parsedDevices = JSON.parse(storedDevices);
+        if (Array.isArray(parsedDevices)) {
+          setDevices(parsedDevices);
+        }
+      } catch (err) {
+        console.error('Failed to parse devices from local storage', err);
+      }
+    }
+    // Fetch fresh data in the background
+    fetchDevices();
+  }, [refreshTrigger]);
 
   const handleAdd = () => setShowModal(true);
 
@@ -88,6 +111,7 @@ export default function Dashboard() {
         name: finalName,
       });
       setDevices(prev => [...prev, response.data]);
+      localStorage.setItem('devices', JSON.stringify([...devices, response.data]));
       setShowModal(false);
       resetForm();
     } catch (err) {
@@ -110,6 +134,11 @@ export default function Dashboard() {
         module: selected.module,
       }));
     }
+  };
+
+  const handlePopupClose = () => {
+    setSelectedDeviceId(null);
+    setRefreshTrigger(prev => prev + 1); // Trigger device refresh
   };
 
   const groupedDevices: Record<string, Device[]> = devices.reduce((acc, device) => {
@@ -163,21 +192,21 @@ export default function Dashboard() {
       {selectedDeviceId !== null && (
         <DevicePopup
           deviceId={selectedDeviceId}
-          onClose={() => setSelectedDeviceId(null)}
+          onClose={handlePopupClose}
         />
       )}
 
       {/* Add Device Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-lg w-full max-w-md space-y-4 animate-fadeIn">
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white">Add New Device</h4>
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-white p-6 rounded-xl shadow-lg w-full max-w-md space-y-4 animate-fadeIn">
+            <h4 className="text-lg font-bold text-gray-100">Add New Device</h4>
 
             {/* Device Template */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Device Template</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Device Template</label>
               <select
-                className="w-full px-3 py-2 rounded border dark:bg-gray-800 dark:text-white"
+                className="w-full px-3 py-2 rounded border border-gray-600 bg-gray-900 text-white"
                 value={templateName}
                 onChange={(e) => handleTemplateChange(e.target.value)}
               >
@@ -190,11 +219,11 @@ export default function Dashboard() {
 
             {/* Custom Label */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Custom Label</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Custom Label</label>
               <input
                 type="text"
                 placeholder="e.g., 1222"
-                className="w-full px-3 py-2 rounded border dark:bg-gray-800 dark:text-white"
+                className="w-full px-3 py-2 rounded border border-gray-600 bg-gray-900 text-white"
                 value={customLabel}
                 onChange={(e) => setCustomLabel(e.target.value)}
               />
@@ -202,9 +231,9 @@ export default function Dashboard() {
 
             {/* Device Location */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Location</label>
               <select
-                className="w-full px-3 py-2 rounded border dark:bg-gray-800 dark:text-white"
+                className="w-full px-3 py-2 rounded border border-gray-600 bg-gray-900 text-white"
                 value={newDevice.location}
                 onChange={(e) => setNewDevice({ ...newDevice, location: e.target.value })}
               >
@@ -217,9 +246,9 @@ export default function Dashboard() {
 
             {/* Auto-filled Fields */}
             <div className="space-y-2">
-              <div className="text-sm text-gray-600 dark:text-gray-400"><strong>Type:</strong> {templateType}</div>
-              {description && <div className="text-sm text-gray-500 dark:text-gray-300 italic">{description}</div>}
-              {moduleTag && <div className="text-sm text-gray-400">Module: <strong>{moduleTag}</strong></div>}
+              <div className="text-sm text-gray-400"><strong>Type:</strong> {templateType}</div>
+              {description && <div className="text-sm text-gray-400 italic">{description}</div>}
+              {moduleTag && <div className="text-sm text-gray-500">Module: <strong>{moduleTag}</strong></div>}
             </div>
 
             {/* Action Buttons */}
@@ -229,7 +258,7 @@ export default function Dashboard() {
                   setShowModal(false);
                   resetForm();
                 }}
-                className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-white"
+                className="text-sm text-gray-400 hover:text-white"
               >
                 Cancel
               </button>

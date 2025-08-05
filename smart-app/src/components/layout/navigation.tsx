@@ -7,7 +7,6 @@ export function Navigation() {
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: Gauge },
     { path: '/settings', label: 'Settings', icon: Settings },
-    { path: '/iot-connection', label: 'IoT Connection', icon: Wifi },
   ];
 
   return (
