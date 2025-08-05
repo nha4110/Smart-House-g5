@@ -179,22 +179,61 @@ async function simulateBehavior(deviceName, deviceId = null, isAutoSimulation = 
           reason: shouldBeOnDH ? 'Humidity 72% or higher' : 'Humidity below 72%',
         };
         break;
-
-      case 'Windows':
-      case 'Servo Motor (Window 1)':
-      case 'Servo Motor (Window 2)':
-        const shouldBeClosedWin = data.rain_detected || data.humidity > 72;
-        behavior = {
-          device: deviceInfo.name,
-          type: 'actuator',
-          status: shouldBeClosedWin ? 'closed' : 'open',
-          reason: shouldBeClosedWin
-            ? data.rain_detected
-              ? 'Rain detected'
-              : 'Humidity above 72%'
-            : 'No rain and humidity 72% or lower',
-        };
-        break;
+case 'Windows':
+case 'Servo Motor (Window 1)':
+case 'Servo Motor (Window 2)':
+  // Enhanced sensor-based window logic
+  let windowStatus, windowReason;
+  
+  // PRIORITY 1: Emergency close conditions
+  const emergencyClose = data.rain_detected || data.humidity > 80 || data.temperature > 40;
+  
+  // PRIORITY 2: Forced open conditions (ventilation needed)
+  const forceOpen = data.temperature > 35 && !data.rain_detected && data.humidity < 60;
+  
+  // PRIORITY 3: Smart ventilation logic
+  const needsVentilation = data.humidity > 75 && !data.rain_detected;
+  const goodWeather = !data.rain_detected && data.temperature >= 22 && data.temperature <= 30 && data.humidity < 70;
+  
+  if (emergencyClose) {
+    windowStatus = 'closed';
+    if (data.rain_detected) {
+      windowReason = 'Emergency close: Rain detected';
+    } else if (data.humidity > 80) {
+      windowReason = 'Emergency close: Humidity exceeds 80%';
+    } else if (data.temperature > 40) {
+      windowReason = 'Emergency close: Extreme heat (>40°C)';
+    }
+  } else if (forceOpen) {
+    windowStatus = 'open';
+    windowReason = 'Forced open: High temperature (>35°C), low humidity, no rain';
+  } else if (needsVentilation) {
+    windowStatus = 'open';
+    windowReason = 'Open for ventilation: High humidity (>75%), no rain';
+  } else if (goodWeather) {
+    windowStatus = 'open';
+    windowReason = 'Open: Good weather conditions (22-30°C, <70% humidity, no rain)';
+  } else {
+    // Default logic - close if conditions aren't ideal
+    windowStatus = 'closed';
+    if (data.temperature < 22) {
+      windowReason = 'Closed: Temperature too low (<22°C)';
+    } else if (data.temperature > 30) {
+      windowReason = 'Closed: Temperature too high (>30°C)';
+    } else if (data.humidity >= 70) {
+      windowReason = 'Closed: Humidity too high (≥70%)';
+    } else {
+      windowReason = 'Closed: Default safety position';
+    }
+  }
+  
+  behavior = {
+    device: deviceInfo.name,
+    type: 'actuator',
+    status: windowStatus,
+    reason: windowReason,
+  };
+  break;
 
       case 'Main Door':
       case 'Servo Motor (Main Door)':
