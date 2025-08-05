@@ -65,23 +65,56 @@ router.put('/:id/status', async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
+  if (!status || !['on', 'off'].includes(status.toLowerCase())) {
+    return res.status(400).json({ error: 'Status must be either "on" or "off"' });
+  }
+
   try {
+    // Get current device info
     const currentDevice = await pool.query(
-      'SELECT status FROM devices WHERE device_id = $1',
+      'SELECT device_id, name, status FROM devices WHERE device_id = $1',
       [id]
     );
     if (currentDevice.rows.length === 0) {
       return res.status(404).json({ error: 'Device not found' });
     }
-    const previousStatus = currentDevice.rows[0].status;
+    
+    const device = currentDevice.rows[0];
+    const previousStatus = device.status;
+    const newStatus = status.toLowerCase();
 
+    // Update device status and timestamp
     await pool.query(
       'UPDATE devices SET status = $1, last_updated = CURRENT_TIMESTAMP WHERE device_id = $2',
-      [status, id]
+      [newStatus, id]
     );
 
-    console.log(`Device ${id} status changed from ${previousStatus} to ${status}`);
-    res.json({ success: true, status });
+    // Log the status change event
+    await pool.query(
+      `INSERT INTO event_logs (device_id, event_type, details, triggered_by)
+       VALUES ($1, $2, $3, $4)`,
+      [
+        id,
+        'status_change',
+        {
+          previous_status: previousStatus,
+          new_status: newStatus,
+          reason: `Manual toggle from ${previousStatus} to ${newStatus}`,
+          timestamp: new Date().toISOString()
+        },
+        'user'
+      ]
+    );
+
+    console.log(`✅ Device ${id} (${device.name}) status manually changed from ${previousStatus} to ${newStatus}`);
+    
+    res.json({ 
+      success: true, 
+      status: newStatus,
+      previous_status: previousStatus,
+      device_name: device.name,
+      message: `Device ${device.name} successfully ${newStatus === 'on' ? 'turned on' : 'turned off'}`
+    });
   } catch (err) {
     console.error('Error updating status:', err);
     res.status(500).json({ error: 'Failed to update status' });

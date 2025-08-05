@@ -155,18 +155,74 @@ export default function DevicePopup({ deviceId, onClose }: DevicePopupProps) {
 
   const toggleDevice = async (enabled: boolean) => {
     try {
+      console.log(`Manually toggling device ${deviceId} to ${enabled ? 'on' : 'off'}`);
+      
       await axios.put(`/api/device/${deviceId}/status`, {
         status: enabled ? 'on' : 'off',
       });
+      
       setIsOn(enabled);
       setDevice(prev => prev ? { ...prev, status: enabled ? 'on' : 'off', last_updated: new Date().toISOString() } : prev);
+      
+      // Log the manual toggle action to event logs
+      await axios.post('/api/event-logs', {
+        device_id: deviceId,
+        event_type: 'manual_toggle',
+        details: {
+          status: enabled ? 'on' : 'off',
+          reason: `Manual toggle by user to ${enabled ? 'on' : 'off'}`,
+          triggered_by: 'user'
+        },
+        triggered_by: 'user'
+      });
+      
       if (enabled) {
-        await fetchBehavior(new AbortController());
+        // Wait a moment for the database to update, then fetch behavior
+        setTimeout(async () => {
+          await fetchBehavior(new AbortController());
+        }, 1000);
       } else {
-        setBehavior({ device: device?.name || `ID ${deviceId}`, message: 'Device is off' });
+        // When turning off, update behavior immediately
+        setBehavior({ 
+          device: device?.name || `ID ${deviceId}`, 
+          message: 'Device manually turned off',
+          status: 'off',
+          reason: 'Manual toggle by user'
+        });
+        
+        // Log the behavior update
+        await axios.post('/api/event-logs', {
+          device_id: deviceId,
+          event_type: 'behavior_update',
+          details: {
+            status: 'off',
+            reason: 'Manual toggle by user'
+          },
+          triggered_by: 'user'
+        });
       }
+      
+      // Refresh device data to get latest information
+      await fetchDeviceData(new AbortController());
+      
     } catch (err) {
       console.error('Error updating device status:', err);
+      // Revert the toggle state if the API call failed
+      setIsOn(!enabled);
+      alert('Failed to update device status. Please try again.');
+    }
+  };
+
+  const fetchBehavior = async (controller: AbortController) => {
+    try {
+      console.log('Fetching behavior for device_id:', deviceId);
+      const res = await axios.get(`/api/device-behavior/${deviceId}`, { signal: controller.signal });
+      console.log('Behavior response:', res.data);
+      setBehavior(res.data);
+    } catch (err) {
+      if (axios.isCancel(err)) return;
+      console.error('Error fetching device behavior:', err);
+      setBehavior({ device: `ID ${deviceId}`, message: 'Failed to fetch behavior' });
     }
   };
 

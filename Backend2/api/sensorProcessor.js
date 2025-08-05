@@ -143,6 +143,17 @@ async function simulateBehavior(deviceName, deviceId = null, isAutoSimulation = 
     const baseDeviceName = deviceInfo.name.split('#')[0].trim();
     let behavior;
 
+    // Check if device was recently manually toggled
+    const recentManualToggle = await pool.query(
+      `SELECT details FROM event_logs 
+       WHERE device_id = $1 AND triggered_by = 'user' 
+       AND timestamp >= NOW() - INTERVAL '30 seconds'
+       ORDER BY timestamp DESC LIMIT 1`,
+      [deviceInfo.device_id]
+    );
+
+    const wasManuallyToggled = recentManualToggle.rows.length > 0;
+
     switch (baseDeviceName) {
       case 'DHT11 Sensor':
         behavior = {
@@ -311,8 +322,21 @@ case 'Servo Motor (Window 2)':
         behavior = {
           device: deviceInfo.name,
           type: 'actuator',
-          status: 'off',
-          reason: 'Manual toggle not simulated, default off',
+          status: deviceInfo.status,
+          reason: wasManuallyToggled 
+            ? `Manual toggle by user - currently ${deviceInfo.status}`
+            : `Default state - currently ${deviceInfo.status}`,
+        };
+        break;
+
+      case 'LED Indicators':
+        behavior = {
+          device: deviceInfo.name,
+          type: 'display',
+          status: deviceInfo.status,
+          reason: wasManuallyToggled 
+            ? `Manual control - currently ${deviceInfo.status}`
+            : `Automatic control - currently ${deviceInfo.status}`,
         };
         break;
 

@@ -22,13 +22,17 @@ router.post('/', async (req, res) => {
   }
 
   try {
+    // Ensure details is properly formatted as JSON
+    const formattedDetails = typeof details === 'string' ? JSON.parse(details) : details;
+    
     const result = await pool.query(
       `INSERT INTO event_logs (device_id, event_type, details, triggered_by)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [device_id, event_type, details, triggered_by]
+      [device_id, event_type, formattedDetails, triggered_by]
     );
 
+    console.log(`📝 Event logged for device ${device_id}: ${event_type} by ${triggered_by}`);
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('POST /event-logs error:', err);
